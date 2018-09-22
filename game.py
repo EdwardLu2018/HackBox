@@ -83,13 +83,14 @@ class HackBox():
         self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1, -1)
         self.input_boxes = [self.chat_box, self.question_input]
         self.username = ''
+        self.dots = 0
 
     def introScreen(self):
-        title = pg.font.SysFont("Times New Roman", 80).render("HackBox", 1, (173,255,47))
+        title = pg.font.SysFont(None, 80).render("HackBox", 1, (173,255,47))
         self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
         description = pg.font.SysFont("Times New Roman", 30).render("Answer coding questions! Play Against Your Friends!", 1, (173,255,47))
         self.screen.blit(description, (425, 180))
-        label = pg.font.SysFont("Times New Roman", 32).render("Please enter a username below:", 1, (173,255,47))
+        label = pg.font.SysFont(None, 32).render("Please enter a username below:", 1, (173,255,47))
         self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
     def phase1(self):
@@ -106,8 +107,12 @@ class HackBox():
 
     def waitingScreen(self):
         code_image = pg.image.load("code_image.png")
-        self.screen.blit(code_image, (60,0))
-        loading = pg.font.SysFont("Times New Roman", 30).render("Loading...", 1, (173, 255, 47))
+        self.screen.blit(code_image, (60, 0))
+        dotstring = ""
+        for dot in range(0, self.dots):
+            dotstring += "."
+        self.dots = (self.dots + 1) % 4
+        loading = pg.font.SysFont("Times New Roman", 30).render("Loading" + dotstring, 1, (173, 255, 47))
         self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
 
     def update(self):
@@ -143,9 +148,9 @@ class HackBox():
                 pg.draw.rect(self.screen, (173,255,47), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
             
             pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
-            chat_label = pg.font.SysFont("Times New Roman", 30).render("Chat:", 1, (173,255,47))
+            chat_label = pg.font.SysFont(None, 30).render("Chat:", 1, (173,255,47))
             self.screen.blit(chat_label, (5, 5))
-            chat_message = pg.font.SysFont("Times New Roman", 30).render("Type Message Below:", 1, (173,255,47))
+            chat_message = pg.font.SysFont(None, 30).render("Type Message Below:", 1, (173,255,47))
             self.screen.blit(chat_message, (10, 610))
             self.question_input.draw(self.screen)
             self.chat_box.draw(self.screen)
