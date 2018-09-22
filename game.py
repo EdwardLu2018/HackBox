@@ -91,7 +91,8 @@ class HackBox():
     def phase1(self):
         #question prompt
         basicfont = pg.font.SysFont(None, 48)
-
+        score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173,255,47))
+        self.screen.blit(score_message, (5, 5))
         question = "What is a good question?"
         text = basicfont.render(question, False,(173,255,47),(0,0,0))
         textrect = text.get_rect()
