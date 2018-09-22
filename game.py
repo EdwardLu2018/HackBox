@@ -2,8 +2,8 @@ import pygame as pg
 
 pg.init()
 
-COLOR_INACTIVE = pg.Color("black")
-COLOR_ACTIVE = pg.Color('white')
+COLOR_INACTIVE = pg.Color("white")
+COLOR_ACTIVE = (173,255,47)
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 700
 
@@ -52,8 +52,8 @@ class InputBox:
 
     # edits the text entered into two lines
     def update(self):
-        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:30], True, self.color)
-        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[30:60], True, self.color)
+        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:30], True, (173,255,47))
+        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[30:60], True, (173,255,47))
 
     # draws chat box
     def draw(self, screen):
@@ -63,8 +63,8 @@ class InputBox:
         if self.xpos_message >= 0 and self.ypos_message >= 0:
             y = self.ypos_message
             for msg in self.log:
-                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, self.color)
-                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, self.color)
+                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, (173,255,47))
+                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, (173,255,47))
                 screen.blit(msg_surface, (self.xpos_message, y))
                 if len(msg) > 20:
                     y += 20
@@ -78,16 +78,18 @@ class HackBox():
         self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pg.display.set_caption("Hackbox")
         self.clock = pg.time.Clock()
-        self.chat_box = InputBox(0, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, True, 0, 0)
+        self.chat_box = InputBox(0, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, True, 5, 30)
         self.question_input = InputBox(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, False, -1, -1)
         self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1, -1)
         self.input_boxes = [self.chat_box, self.question_input]
         self.username = ''
 
     def introScreen(self):
-        title = pg.font.Font(None, 80).render("HackBox", 1, (255, 255, 255))
-        label = pg.font.Font(None, 32).render("Please enter a username below:", 1, (255, 255, 255))
+        title = pg.font.Font(None, 80).render("HackBox", 1, (173,255,47))
         self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
+        description = pg.font.Font(None, 30).render("Answer coding questions! Play Against Your Friends!", 1, (173,255,47))
+        self.screen.blit(description, (425, 180))
+        label = pg.font.Font(None, 32).render("Please enter a username below:", 1, (173,255,47))
         self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
     def phase1(self):
@@ -110,7 +112,7 @@ class HackBox():
     def update(self):
         self.clock.tick(60)
         
-        self.screen.fill((66, 134, 244))
+        self.screen.fill((0,0,0))
 
         if self.state == 0:
             hb.introScreen()
@@ -136,11 +138,14 @@ class HackBox():
             self.question_input.update()
 
             if pg.mouse.get_pressed()[0]:
-                pos = pg.mouse.get_pos()
-                pg.draw.rect(self.screen, (255, 0, 0), (pos[0] - 5, pos[1] - 5, 10, 10), 0)
-                
-            chat_message = pg.font.SysFont("Times New Roman", 30).render("Type Message Below:", 1, (255,255,255))
-            self.screen.blit(chat_message, (10, 600))
+                mouse_pos = pg.mouse.get_pos()
+                pg.draw.rect(self.screen, (255, 0, 0), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
+            
+            pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
+            chat_label = pg.font.SysFont("Times New Roman", 30).render("Chat:", 1, (173,255,47))
+            self.screen.blit(chat_label, (5, 5))
+            chat_message = pg.font.SysFont("Times New Roman", 30).render("Type Message Below:", 1, (173,255,47))
+            self.screen.blit(chat_message, (10, 610))
             self.question_input.draw(self.screen)
             self.chat_box.draw(self.screen)
             
