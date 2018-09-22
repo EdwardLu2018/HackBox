@@ -244,11 +244,13 @@ class HackBox():
 
         elif self.state == 1:
             self.phase1()
+            answer = 0
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                answer = self.question_input.handle_event(event)
-                self.chat_box.handle_event(event)
+                if event.type == pg.MOUSEBUTTONDOWN or event.type == pg.KEYDOWN:
+                    answer = self.question_input.handle_event(event)
+                    self.chat_box.handle_event(event)
                 if answer != 0:
                     sheet3.update_cell(row, 4, answer)
                     self.state += 1
@@ -256,10 +258,6 @@ class HackBox():
 
             self.chat_box.update()
             self.question_input.update()
-
-            if pg.mouse.get_pressed()[0]:
-                mouse_pos = pg.mouse.get_pos()
-                pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
 
             pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
             chat_label = pg.font.SysFont("None", 30).render("Chat:", 1, (173, 255, 47))
@@ -274,12 +272,6 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                self.chat_box.handle_event(event)
-            self.chat_box.update()
-            self.chat_box.draw(self.screen)
-            if pg.mouse.get_pressed()[0]:
-                mouse_pos = pg.mouse.get_pos()
-                pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
             if check_col(sheet3, 4, "0"):
                 self.state += 1
 
@@ -296,17 +288,17 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                self.chat_box.handle_event(event)
-            self.chat_box.update()
-            self.chat_box.draw(self.screen)
-            if pg.mouse.get_pressed()[0]:
-                mouse_pos = pg.mouse.get_pos()
-                pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
             if check_col(sheet3, 5, "0"):
                 self.state += 1
 
         elif self.state == 5:
+            self.phase5()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+            #BAD! WRITE REAL WAY TO DETECT ROUND OVER!
             self.state = 1
+
 
         pg.display.flip()
 
