@@ -9,12 +9,15 @@ client = gspread.authorize(creds)
 
 sheet = client.open("Hackbox")
 sheet3 = sheet.worksheet('sheet3')
-questions = sheet.worksheet('questions')
 row = 0
 
 #Convert a guess to a dictionary
-def guess_to_dict():
-    pass
+def guess_to_dict(answers, players):
+    lstOfAns = answers.split(",")
+    d = {}
+    for i in range(len(lstOfAns)):
+        d[str(players[i])] = str(lstOfAns[i])
+    return d
 
 
 #Based on answers, return a dictionary with correct answers
@@ -107,7 +110,7 @@ WINDOW_HEIGHT = 700
 
 class InputBox:
     # constructor for input box
-    def __init__(self, xpos, ypos, w, h, is_c, mx, my, text=''):
+    def __init__(self, xpos, ypos, w, h, is_c, mx, my, max_len, text=''):
         self.text = text
         self.input_box = pg.Rect(xpos, ypos, w, h)
         self.is_chat_box = is_c
@@ -118,9 +121,7 @@ class InputBox:
         self.txt_surface2 = pg.font.Font(None, 32).render(text, True, self.color)  # next 20 char of chat message
         self.is_active = False
         self.log = list()  # chat log
-        self.max_msg = 1
-        if self.is_chat_box:
-            self.max_msg = 20
+        self.max_msg = max_len
 
     # handles mouse click
     def handle_event(self, event):
@@ -144,14 +145,14 @@ class InputBox:
                         return self.log[len(self.log) - 1]
                 elif event.key == pg.K_BACKSPACE:
                     self.text = self.text[:-1]
-                elif len(self.text) < 60:
+                elif len(self.text) < self.max_msg:
                     self.text += event.unicode
         return 0
 
     # edits the text entered into two lines
     def update(self):
-        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:30], True, (173, 255, 47))
-        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[30:60], True, (173, 255, 47))
+        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:int(self.max_msg/2)], True, (173, 255, 47))
+        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[int(self.max_msg/2):int(self.max_msg)], True, (173, 255, 47))
 
     # draws chat box
     def draw(self, screen):
@@ -163,19 +164,21 @@ class InputBox:
 
 class HackBox():
     def __init__(self):
-        global sheet3
+        global sheet3, sheet
         self.state = 0
         self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pg.display.set_caption("Hackbox")
         self.clock = pg.time.Clock()
-        self.question_input = InputBox(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, False, -1, -1)
-        self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1,
-                                       -1)
+        self.question_input = InputBox(WINDOW_WIDTH / 4, WINDOW_HEIGHT / 3, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, 64, -1, -1,
+                                       100)
+        self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, WINDOW_HEIGHT / 3, 64, -1, -1, 30)
         self.username = ''
         self.dots = 0
-        self.question = 1
+        self.question = 0
         self.score = 0
         self.players = list()
+        self.questions = sheet.worksheet('questions').get_all_values()
+        print(self.questions)
         reset(sheet3)
 
     def introScreen(self):
@@ -188,8 +191,15 @@ class HackBox():
         self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
     def phase1(self):
-        the_question = sheet3.cell(self.question, 1)
-        #Display the_question on the screen
+        the_question = self.questions[self.question][0]
+        basicfont = pg.font.SysFont(None, 48)
+
+        text = basicfont.render(the_question, False, (173, 255, 47), (0, 0, 0))
+        textrect = text.get_rect()
+        textrect.centerx = WINDOW_WIDTH / 2
+        textrect.centery = 150
+        self.screen.blit(text, textrect)
+        self.question_input.draw(self.screen)
 
     def phase3(self):
         #Display the 4 players and mixed answers
@@ -209,8 +219,18 @@ class HackBox():
         loading = pg.font.SysFont("None", 30).render("Loading" + dotstring, 1, (173, 255, 47))
         self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
 
+    def update_score(self):
+        inc = 0
+        values = sheet3.get_all_values()
+        solutions = get_correct_answer(sheet3)
+        guess_dict = guess_to_dict(values[row - 1][4], self.players)
+        for player in solutions:
+            if solutions[player] == guess_dict[player]:
+                inc += 100
+        self.score += inc
+
     def update(self):
-        global sheet3, questions, row
+        global sheet3, row
         self.clock.tick(60)
 
         self.screen.fill((0, 0, 0))
@@ -284,12 +304,14 @@ class HackBox():
                 if event.type == pg.QUIT:
                     exit()
             if row == 1:
+                #self.update_score()
                 clear_answers(sheet3)
                 clear_guesses(sheet3)
                 self.state = 1
             else:
                 time.sleep(1)
                 if check_col(sheet3, 5, "0"):
+                    #self.update_score()
                     self.state = 1
         pg.display.flip()
 
