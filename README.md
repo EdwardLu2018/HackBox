@@ -1,5 +1,4 @@
 # HackBox
 
-Game
-
-Help me. I am so sad.
+Sick game! 
+(4 ppl w/ no friends)
