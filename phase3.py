@@ -37,3 +37,9 @@ class DisplayInputs():
                 self.color = self.actCol
                 self.clicked = not self.clicked
         return self.clicked
+
+            for i in range(len(self.players)):
+                usernames = DisplayInputs(self.players[i], WINDOW_WIDTH/8, 150+i*125, (173,255,47),(255,255,255))
+                answers = DisplayInputs(self.answers[i], WINDOW_WIDTH*3/4, 150+i*125, (173,255,47), (255,255,255))
+                self.playerRect.append(usernames)
+                self.answerRect.append(answers)
