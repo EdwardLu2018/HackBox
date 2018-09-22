@@ -1,110 +1,115 @@
 import pygame as pg
 
 pg.init()
-COLOR_INACTIVE = pg.Color("black")
-COLOR_ACTIVE = pg.Color("white")
-WIDTH = 1400
-HEIGHT = 700
-FONT = pg.font.Font(None, 32)
-supFONT = pg.font.Font(None, 80)
 
+COLOR_INACTIVE = pg.Color("black")
+COLOR_ACTIVE = pg.Color('white')
+WINDOW_WIDTH = 1400
+WINDOW_HEIGHT = 700
 
 class InputBox:
-    def __init__(self, x, y, w, h, c, mx, my, text=''):
-        self.input_box = pg.Rect(x, y, w, h)
-        self.c = c
-        self.mx = mx
-        self.my = my
-        self.color = COLOR_INACTIVE
+    # constructor for input box
+    def __init__(self, xpos, ypos, w, h, is_c, mx, my, text=''):
         self.text = text
-        self.txt_surface = FONT.render(text, True, self.color)
-        self.txt_surface2 = FONT.render(text, True, self.color)
-        self.active = False
-        self.log = list()
+        self.input_box = pg.Rect(xpos, ypos, w, h)
+        self.is_chat_box = is_c 
+        self.xpos_message = mx
+        self.ypos_message = my
+        self.color = COLOR_INACTIVE
+        self.txt_surface = pg.font.Font(None, 32).render(text, True, self.color) # first 20 char of chat message
+        self.txt_surface2 = pg.font.Font(None, 32).render(text, True, self.color) # next 20 char of chat message
+        self.is_active = False
+        self.log = list() # chat log
         self.max_msg = 1
-        if c:
+        if self.is_chat_box:
             self.max_msg = 27
 
+    # handles mouse click
     def handle_event(self, event):
+        # if the user clicked on the input box, input box is active
         if event.type == pg.MOUSEBUTTONDOWN:
-            # If the user clicked on the input_box rect.
             if self.input_box.collidepoint(event.pos):
-                # Toggle the active variable.
-                self.active = not self.active
+                self.is_active = not self.is_active
             else:
-                self.active = False
-            # Change the current color of the input box.
-            self.color = COLOR_ACTIVE if self.active else COLOR_INACTIVE
+                self.is_active = False
+            self.color = COLOR_ACTIVE if self.is_active else COLOR_INACTIVE
+            
+        # checks if key is pushed
         if event.type == pg.KEYDOWN:
-            if self.active:
+            if self.is_active:
                 if event.key == pg.K_RETURN:
-                    self.log.append(self.text)
-                    if len(self.log) > self.max_msg:
-                        self.log.pop(0)
-                    self.text = ''
-                    return 1
+                    if len(self.text) != 0:
+                        self.log.append(self.text) # adds to chat log
+                        if len(self.log) > self.max_msg:
+                            self.log.pop(0)
+                        self.text = ''
+                        return self.log[len(self.log) - 1]
                 elif event.key == pg.K_BACKSPACE:
                     self.text = self.text[:-1]
                 elif len(self.text) < 60:
                     self.text += event.unicode
         return 0
 
+    # edits the text entered into two lines
     def update(self):
-        # Render the current text.
-        self.txt_surface = FONT.render(self.text[0:30], True, self.color)
-        self.txt_surface2 = FONT.render(self.text[30:60], True, self.color)
-        self.input_box.w = WIDTH / 2
+        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:30], True, self.color)
+        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[30:60], True, self.color)
 
+    # draws chat box
     def draw(self, screen):
+        self.input_box.w = WINDOW_WIDTH / 2
         screen.blit(self.txt_surface, (self.input_box.x + 5, self.input_box.y + 5))
         screen.blit(self.txt_surface2, (self.input_box.x + 5, self.input_box.y + 37))
-        #if self.c:
-        y = self.my;
-        for msg in self.log:
-            msg_surface = FONT.render(msg[0:30], True, self.color)
-            msg_surface2 = FONT.render(msg[30:60], True, self.color)
-            screen.blit(msg_surface, (self.mx, y))
-            if len(msg) > 20:
+        if self.xpos_message >= 0 and self.ypos_message >= 0:
+            y = self.ypos_message
+            for msg in self.log:
+                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, self.color)
+                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, self.color)
+                screen.blit(msg_surface, (self.xpos_message, y))
+                if len(msg) > 20:
+                    y += 20
+                screen.blit(msg_surface2, (self.xpos_message, y))
                 y += 20
-            screen.blit(msg_surface2, (self.mx, y))
-            y += 20
-        #else:
-            #msg_surface = FONT.render(self.text[0:30], True, self.color)
-            #msg_surface2 = FONT.render(self.text[30:60], True, self.color)
-            #screen.blit(msg_surface, (WIDTH / 2, 300))
-            #screen.blit(msg_surface2, (WIDTH / 2, 320))
         pg.draw.rect(screen, self.color, self.input_box, 2)
-
 
 class HackBox():
     def __init__(self):
         self.state = 0
-        self.width, self.height = WIDTH, HEIGHT
-        self.screen = pg.display.set_mode((WIDTH, HEIGHT))
+        self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pg.display.set_caption("Hackbox")
         self.clock = pg.time.Clock()
-        self.chat_box = InputBox(0, HEIGHT - 64, WIDTH / 2, 64, True, 0, 0)
-        self.question_input = InputBox(WIDTH / 2, HEIGHT - 64, WIDTH / 2, 64, False, WIDTH / 2, HEIGHT / 2)
-        self.username_input = InputBox(WIDTH / 4 + 20, HEIGHT / 3 + 100, WIDTH / 2, 64, False, WIDTH / 2, HEIGHT / 2)
+        self.chat_box = InputBox(0, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, True, 0, 0)
+        self.question_input = InputBox(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, False, -1, -1)
+        self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1, -1)
         self.input_boxes = [self.chat_box, self.question_input]
+        self.username = ''
 
     def introScreen(self):
-        title = supFONT.render("HackBox", 1, (255, 255, 255))
-        label = FONT.render("Please enter a username below:", 1, (255, 255, 255))
-        self.screen.blit(title, (WIDTH / 3 + 120, 100))
-        self.screen.blit(label, (WIDTH / 3 + 75, HEIGHT / 3 + 75))
+        title = pg.font.Font(None, 80).render("HackBox", 1, (255, 255, 255))
+        label = pg.font.Font(None, 32).render("Please enter a username below:", 1, (255, 255, 255))
+        self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
+        self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
-    def loadingScreen(self):
+    def phase1(self):
+        pass
+    def phase2(self):
+        pass
+    def phase3(self):
+        pass
+    def phase4(self):
+        #Very similar to phase2. Maybe just copy paste most of it
+        pass
+    def phase5(self):
+        pass
+
+    def waitingScreen(self):
         pg.draw.rect(self.screen, 0, (50, 50, 100, 100), 0)
-        myfont = pg.font.SysFont("Comic Sans MS", 30)
-        # apply it to text on a label
-        label = myfont.render("Loading...", 1, (255, 255, 255))
-        # put the label object on the screen at point x=100, y=100
-        self.screen.blit(label, (WIDTH / 2, 0))
+        loading = pg.font.SysFont("Times New Roman", 30).render("Loading...", 1, (255, 255, 255))
+        self.screen.blit(loading, (WINDOW_WIDTH / 2, 0))
 
     def update(self):
         self.clock.tick(60)
-
+        
         self.screen.fill((66, 134, 244))
 
         if self.state == 0:
@@ -112,27 +117,50 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                if self.username_input.handle_event(event):
+                self.username = self.username_input.handle_event(event)
+                if self.username != 0:
                     self.state += 1
             self.username_input.update()
             self.username_input.draw(self.screen)
 
-        else:
+        elif self.state == 1:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                for box in self.input_boxes:
-                    box.handle_event(event)
+                answer = self.question_input.handle_event(event)
+                self.chat_box.handle_event(event)
+                if answer != 0:
+                    self.state += 1
 
-            for box in self.input_boxes:
-                box.update()
+            self.chat_box.update()
+            self.question_input.update()
 
             if pg.mouse.get_pressed()[0]:
                 pos = pg.mouse.get_pos()
                 pg.draw.rect(self.screen, (255, 0, 0), (pos[0] - 5, pos[1] - 5, 10, 10), 0)
+                
+            chat_message = pg.font.SysFont("Times New Roman", 30).render("Type Message Below:", 1, (255,255,255))
+            self.screen.blit(chat_message, (10, 600))
+            self.question_input.draw(self.screen)
+            self.chat_box.draw(self.screen)
+            
+        elif self.state == 2:
+            self.state += 1
 
-            for box in self.input_boxes:
-                box.draw(self.screen)
+        elif self.state == 3:
+            self.phase3()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                elif event.type == pg.MOUSEBUTTONDOWN:
+                    self.state += 1
+
+        elif self.state == 4:
+            self.state += 1
+
+        elif self.state == 5:
+            self.state = 1
+            
         pg.display.flip()
 
 
