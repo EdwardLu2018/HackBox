@@ -113,10 +113,18 @@ class HackBox():
             self.username_input.draw(self.screen)
 
         elif self.state == 1:
-            if len(self.players) == 0:
+            self.waitingScreen()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+            time.sleep(1)
+            if check_col(sheet3, 1, "0"):
                 ps = read_col(sheet3, 1)
                 for p in ps:
                     self.players.append(p)
+                self.state += 1
+
+        elif self.state == 2:
             self.phase1()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -131,7 +139,7 @@ class HackBox():
             self.question_input.update()
             self.question_input.draw(self.screen)
 
-        elif self.state == 2:
+        elif self.state == 3:
             self.waitingScreen()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -140,7 +148,7 @@ class HackBox():
             if check_col(sheet3, 4, "0"):
                 self.state += 1
 
-        elif self.state == 3:
+        elif self.state == 4:
             self.phase3()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -148,7 +156,7 @@ class HackBox():
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     self.state += 1
 
-        elif self.state == 4:
+        elif self.state == 5:
             self.waitingScreen()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -157,7 +165,7 @@ class HackBox():
             if check_col(sheet3, 5, "0"):
                 self.state += 1
 
-        elif self.state == 5:
+        elif self.state == 6:
             self.phase5()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -166,12 +174,24 @@ class HackBox():
                 #self.update_score()
                 clear_answers(sheet3)
                 clear_guesses(sheet3)
-                self.state = 1
+                self.state = 2
             else:
                 time.sleep(1)
                 if check_col(sheet3, 5, "0"):
                     #self.update_score()
-                    self.state = 1
+                    self.state = 2
+            if self.question == len(self.questions):
+                self.state = 7
+        elif self.state == 7:
+            #Display leaderboard
+            scores = read_col(sheet3, 2)
+            #DISPLAY LEADERBOARD HERE
+
+            #Let them out
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+
         pg.display.flip()
 
 
