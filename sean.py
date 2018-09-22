@@ -37,7 +37,7 @@ class HackBox():
         self.score = 0
         self.players = list()
         self.questions = sheet.worksheet('questions').get_all_values()
-        print(self.questions)
+        self.clicked = False
         reset(sheet3)
 
     def introScreen(self):
@@ -71,6 +71,15 @@ class HackBox():
         #Display the 4 answers and who thought who answered what
         score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
         self.screen.blit(score_message, (5, 5))
+        answersInOrder = read_col(sheet3, 4)
+        for i in range((len(self.players)) // 2):
+            for k in range((len(self.players)) // 2):
+                pg.draw.rect(self.screen, (0, 0, 255),
+                             (WINDOW_WIDTH / 4 * (i + 1) + 50, WINDOW_HEIGHT / 4 * (k + 1), 200, 100), 0)
+                description = pg.font.SysFont("None", 30).render(self.players[2 * i + k], 1, (173, 255, 47))
+                self.screen.blit(description, (WINDOW_WIDTH / 4 * (i + 1) + 70, WINDOW_HEIGHT / 4 * (k + 1) + 30))
+                label = pg.font.SysFont(None, 32).render(answersInOrder[2 * i + k], 1, (173, 255, 47))
+                self.screen.blit(label, (WINDOW_WIDTH / 4 * (i + 1) + 70, WINDOW_HEIGHT / 4 * (k + 1) + 50))
 
     def phase7(self):
         scores = read_col(sheet3, 2)
@@ -184,18 +193,22 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-            if row == 1:
-                #self.update_score()
-                clear_answers(sheet3)
-                clear_guesses(sheet3)
-                self.state = 2
-            else:
-                time.sleep(1)
-                if check_col(sheet3, 5, "0"):
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    self.clicked = True
+            if self.clicked:
+                if row == 1:
                     #self.update_score()
+                    clear_answers(sheet3)
+                    clear_guesses(sheet3)
                     self.state = 2
-            if self.question == len(self.questions):
-                self.state = 7
+                else:
+                    time.sleep(1)
+                    if check_col(sheet3, 5, "0"):
+                        #self.update_score()
+                        self.state = 2
+                if self.question == len(self.questions):
+                    self.state = 7
+                self.clicked = False
         elif self.state == 7:
             #Display leaderboard
             self.phase7()
