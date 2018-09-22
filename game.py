@@ -104,9 +104,10 @@ class HackBox():
         pass
 
     def waitingScreen(self):
-        pg.draw.rect(self.screen, 0, (50, 50, 100, 100), 0)
-        loading = pg.font.SysFont("Times New Roman", 30).render("Loading...", 1, (255, 255, 255))
-        self.screen.blit(loading, (WINDOW_WIDTH / 2, 0))
+        code_image = pg.image.load("code_image.png")
+        self.screen.blit(code_image, (60,0))
+        loading = pg.font.SysFont("Times New Roman", 30).render("Loading...", 1, (173, 255, 47))
+        self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
 
     def update(self):
         self.clock.tick(60)
