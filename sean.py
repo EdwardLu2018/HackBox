@@ -175,6 +175,7 @@ class HackBox():
         self.dots = 0
         self.question = 1
         self.score = 0
+        self.players = list()
         reset(sheet3)
 
     def introScreen(self):
@@ -233,6 +234,10 @@ class HackBox():
             self.username_input.draw(self.screen)
 
         elif self.state == 1:
+            if len(self.players) == 0:
+                ps = read_col(sheet3, 1)
+                for p in ps:
+                    self.players.append(p)
             self.phase1()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
