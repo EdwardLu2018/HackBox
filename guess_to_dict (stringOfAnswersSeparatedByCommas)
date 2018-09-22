@@ -1,0 +1,7 @@
+def guess_to_dict(answers):
+    lstOfAns = answers.split (",")
+    dict = {}
+    for i in range (len(lstOfAns)):
+        dict [str(self.players[i])] = str(lstOfAns [i])
+    return dict
+    
