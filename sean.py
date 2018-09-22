@@ -2,6 +2,8 @@ import pygame as pg
 import gspread
 import time
 from oauth2client.service_account import ServiceAccountCredentials
+from utility import *
+from box import InputBox
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
@@ -11,155 +13,12 @@ sheet = client.open("Hackbox")
 sheet3 = sheet.worksheet('sheet3')
 row = 0
 
-#Convert a guess to a dictionary
-def guess_to_dict(answers, players):
-    lstOfAns = answers.split(",")
-    d = {}
-    for i in range(len(lstOfAns)):
-        d[str(players[i])] = str(lstOfAns[i])
-    return d
-
-
-#Based on answers, return a dictionary with correct answers
-def get_correct_answer(s):
-    values = s.get_all_values()
-    solution = {}
-    keys = list()
-    vals = list()
-    for player in values:
-        keys.append(player[0])
-        vals.append(player[3])
-    for i in range(0, 4):
-        solution[keys[i]] = vals[i]
-    return solution
-
-#Reset the sheet for a new game
-def reset(s):
-    cells = all_cells(s)
-    for cell in cells:
-        cell.value = "0"
-    s.update_cells(cells)
-
-#More utility
-def col_cells(s, col):
-    return s.range(1, col, 4, col)
-
-#Clear the answers
-def clear_answers(s):
-    cells = col_cells(s, 4)
-    for cell in cells:
-        cell.value = "0"
-    s.update_cells(cells)
-
-#Utility
-def all_cells(s):
-    return s.range(1, 1, 4, 5)
-
-#Clear the guesses
-def clear_guesses(s):
-    cells = col_cells(s, 5)
-    for cell in cells:
-        cell.value = "0"
-    s.update_cells(cells)
-
-#Update your score
-def update_score(s, inc):
-    global row
-    score = int(s.cell(row, 2).value)
-    s.update_cell(row, 2, score + inc)
-
-#Send a chat message
-def send_msg(s, msg):
-    global row
-    s.update_cell(row, 3, msg)
-
-#Send an answer
-def send_answer(s, ans):
-    global row
-    s.update_cell(row, 4, ans)
-
-#Send a guess
-def send_guess(s, guess):
-    global row
-    s.update_cell(row, 5, guess)
-
-#Read col
-def read_col(s, col):
-    return s.col_values(col)
-
-#Check value at a cell
-def check_cell(s, row, col, val):
-    return s.cell(row, col).value == val
-
-#Check col for zeroes
-def check_col(s, col, v):
-    vals = s.col_values(col)
-    for val in vals:
-        if val == v:
-            return False
-    return True
-
-
 pg.init()
 
 COLOR_INACTIVE = pg.Color("white")
 COLOR_ACTIVE = (173, 255, 47)
 WINDOW_WIDTH = 1400
 WINDOW_HEIGHT = 700
-
-
-class InputBox:
-    # constructor for input box
-    def __init__(self, xpos, ypos, w, h, is_c, mx, my, max_len, text=''):
-        self.text = text
-        self.input_box = pg.Rect(xpos, ypos, w, h)
-        self.is_chat_box = is_c
-        self.xpos_message = mx
-        self.ypos_message = my
-        self.color = COLOR_INACTIVE
-        self.txt_surface = pg.font.Font(None, 32).render(text, True, self.color)  # first 20 char of chat message
-        self.txt_surface2 = pg.font.Font(None, 32).render(text, True, self.color)  # next 20 char of chat message
-        self.is_active = False
-        self.log = list()  # chat log
-        self.max_msg = max_len
-
-    # handles mouse click
-    def handle_event(self, event):
-        # if the user clicked on the input box, input box is active
-        if event.type == pg.MOUSEBUTTONDOWN:
-            if self.input_box.collidepoint(event.pos):
-                self.is_active = not self.is_active
-            else:
-                self.is_active = False
-            self.color = COLOR_ACTIVE if self.is_active else COLOR_INACTIVE
-
-        # checks if key is pushed
-        if event.type == pg.KEYDOWN:
-            if self.is_active:
-                if event.key == pg.K_RETURN:
-                    if len(self.text) != 0:
-                        self.log.append(self.text)  # adds to chat log
-                        if len(self.log) > self.max_msg:
-                            self.log.pop(0)
-                        self.text = ''
-                        return self.log[len(self.log) - 1]
-                elif event.key == pg.K_BACKSPACE:
-                    self.text = self.text[:-1]
-                elif len(self.text) < self.max_msg:
-                    self.text += event.unicode
-        return 0
-
-    # edits the text entered into two lines
-    def update(self):
-        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:int(self.max_msg/2)], True, (173, 255, 47))
-        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[int(self.max_msg/2):int(self.max_msg)], True, (173, 255, 47))
-
-    # draws chat box
-    def draw(self, screen):
-        self.input_box.w = WINDOW_WIDTH / 2
-        screen.blit(self.txt_surface, (self.input_box.x + 5, self.input_box.y + 5))
-        screen.blit(self.txt_surface2, (self.input_box.x + 5, self.input_box.y + 37))
-        pg.draw.rect(screen, self.color, self.input_box, 2)
 
 
 class HackBox():
@@ -265,7 +124,7 @@ class HackBox():
                 if event.type == pg.MOUSEBUTTONDOWN or event.type == pg.KEYDOWN:
                     answer = self.question_input.handle_event(event)
                     if answer != 0:
-                        send_answer(sheet3, answer)
+                        send_answer(sheet3, answer, row)
                         self.state += 1
                         self.question += 1
 
