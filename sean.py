@@ -4,6 +4,8 @@ import time
 from oauth2client.service_account import ServiceAccountCredentials
 from utility import *
 from box import InputBox
+from displayinput import DisplayInputs
+import random
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
@@ -39,6 +41,11 @@ class HackBox():
         self.questions = sheet.worksheet('questions').get_all_values()
         self.clicked = False
         self.answers = list()
+        self.playerRect = list()
+        self.answerRect = list()
+        self.selectedPlayer = 0
+        self.selectedAnswer = 0
+        self.guess = {}
         reset(sheet3)
 
     def introScreen(self):
@@ -67,13 +74,19 @@ class HackBox():
         #Display the 4 players and mixed answers
         score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
         self.screen.blit(score_message, (5, 5))
+        prompt = pg.font.SysFont(None, 48).render("Match Each Person to Answer", False, (173, 255, 47))
+        promptRect = prompt.get_rect()
+        promptRect.centerx = WINDOW_WIDTH / 2
+        promptRect.centery = 50
+        self.screen.blit(prompt, promptRect)
+        for i in range(len(self.playerRect)):
+            self.playerRect[i].draw(self.screen)
+            self.answerRect[i].draw(self.screen)
 
     def phase5(self):
         #Display the 4 answers and who thought who answered what
         score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
         self.screen.blit(score_message, (5, 5))
-        if len(self.answers) == 0:
-            self.answers = read_col(sheet3, 4)
         for i in range(2):
             for k in range(2):
                 x = 0
@@ -164,6 +177,7 @@ class HackBox():
                 ps = read_col(sheet3, 1)
                 for p in ps:
                     self.players.append(p)
+                    self.guess[p] = "0"
                 self.state += 1
 
         elif self.state == 2:
@@ -188,6 +202,16 @@ class HackBox():
                     exit()
             time.sleep(1)
             if check_col(sheet3, 4, "0"):
+                if len(self.answers) == 0:
+                    self.answers = read_col(sheet3, 4)
+                a = random.sample(range(0, 4), 4)
+                for i in range(4):
+                    usernames = DisplayInputs(self.players[i], WINDOW_WIDTH / 8, 150 + i * 125, (173, 255, 47),
+                                              (255, 255, 255))
+                    answers = DisplayInputs(self.answers[i], WINDOW_WIDTH * 3 / 4, 150 + a[i] * 125, (173, 255, 47),
+                                            (255, 255, 255))
+                    self.playerRect.append(usernames)
+                    self.answerRect.append(answers)
                 self.state += 1
 
         elif self.state == 4:
@@ -195,8 +219,27 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                elif event.type == pg.MOUSEBUTTONDOWN:
-                    self.state += 1
+                for p in self.playerRect:
+                    handled = p.handle_event(event)
+                    if handled != 0:
+                        self.selectedPlayer = handled
+                for a in self.answerRect:
+                    handled = a.handle_event(event)
+                    if handled != 0:
+                        self.selectedAnswer = handled
+                        self.guess[self.selectedPlayer.content] = self.selectedAnswer.content
+                        self.playerRect.remove(self.selectedPlayer)
+                        self.answerRect.remove(self.selectedAnswer)
+                        self.selectedPlayer = 0
+                        self.selectedAnswer = 0
+            if len(self.playerRect) == 0:
+                g = ''
+                for key in self.guess:
+                    g += self.guess[key] + ","
+                g = g[0:len(g) - 1]
+                send_guess(sheet3, g, row)
+                self.state += 1
+
 
         elif self.state == 5:
             self.waitingScreen()
@@ -216,16 +259,17 @@ class HackBox():
                     self.clicked = True
             if self.clicked:
                 if row == 1:
-                    #self.update_score()
+                    self.update_score()
                     clear_answers(sheet3)
                     clear_guesses(sheet3)
                     self.state = 2
                 else:
                     time.sleep(1)
                     if check_col(sheet3, 5, "0"):
-                        #self.update_score()
+                        self.update_score()
                         self.state = 2
                 if self.question == len(self.questions):
+                    update_score(sheet3, self.score, row)
                     self.state = 7
                 self.clicked = False
                 self.answers = list()
