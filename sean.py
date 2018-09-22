@@ -1,5 +1,6 @@
 import pygame as pg
 import gspread
+import time
 from oauth2client.service_account import ServiceAccountCredentials
 
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
@@ -157,16 +158,6 @@ class InputBox:
         self.input_box.w = WINDOW_WIDTH / 2
         screen.blit(self.txt_surface, (self.input_box.x + 5, self.input_box.y + 5))
         screen.blit(self.txt_surface2, (self.input_box.x + 5, self.input_box.y + 37))
-        if self.xpos_message >= 0 and self.ypos_message >= 0:
-            y = self.ypos_message
-            for msg in self.log:
-                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, (173, 255, 47))
-                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, (173, 255, 47))
-                screen.blit(msg_surface, (self.xpos_message, y))
-                if len(msg) > 20:
-                    y += 25
-                screen.blit(msg_surface2, (self.xpos_message, y))
-                y += 25
         pg.draw.rect(screen, self.color, self.input_box, 2)
 
 
@@ -177,11 +168,9 @@ class HackBox():
         self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pg.display.set_caption("Hackbox")
         self.clock = pg.time.Clock()
-        self.chat_box = InputBox(0, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, True, 5, 30)
         self.question_input = InputBox(WINDOW_WIDTH / 2, WINDOW_HEIGHT - 64, WINDOW_WIDTH / 2, 64, False, -1, -1)
         self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1,
                                        -1)
-        self.input_boxes = [self.chat_box, self.question_input]
         self.username = ''
         self.dots = 0
         self.question = 1;
@@ -244,34 +233,25 @@ class HackBox():
 
         elif self.state == 1:
             self.phase1()
-            answer = 0
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
                 if event.type == pg.MOUSEBUTTONDOWN or event.type == pg.KEYDOWN:
                     answer = self.question_input.handle_event(event)
-                    self.chat_box.handle_event(event)
-                if answer != 0:
-                    sheet3.update_cell(row, 4, answer)
-                    self.state += 1
-                    self.question += 1
+                    if answer != 0:
+                        send_answer(sheet3, answer)
+                        self.state += 1
+                        self.question += 1
 
-            self.chat_box.update()
             self.question_input.update()
-
-            pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
-            chat_label = pg.font.SysFont("None", 30).render("Chat:", 1, (173, 255, 47))
-            self.screen.blit(chat_label, (5, 5))
-            chat_message = pg.font.SysFont("None", 30).render("Type Message Below:", 1, (173, 255, 47))
-            self.screen.blit(chat_message, (10, 610))
             self.question_input.draw(self.screen)
-            self.chat_box.draw(self.screen)
 
         elif self.state == 2:
             self.waitingScreen()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
+            time.sleep(1)
             if check_col(sheet3, 4, "0"):
                 self.state += 1
 
@@ -288,6 +268,7 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
+            time.sleep(1)
             if check_col(sheet3, 5, "0"):
                 self.state += 1
 
@@ -296,10 +277,14 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-            #BAD! WRITE REAL WAY TO DETECT ROUND OVER!
-            self.state = 1
-
-
+            if row == 1:
+                clear_answers(sheet3)
+                clear_guesses(sheet3)
+                self.state = 1
+            else:
+                time.sleep(1)
+                if check_col(sheet3, 5, "0"):
+                    self.state = 1
         pg.display.flip()
 
 
