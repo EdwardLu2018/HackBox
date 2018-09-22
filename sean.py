@@ -52,6 +52,8 @@ class HackBox():
     def phase1(self):
         the_question = self.questions[self.question][0]
         basicfont = pg.font.SysFont(None, 48)
+        score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
+        self.screen.blit(score_message, (5, 5))
 
         text = basicfont.render(the_question, False, (173, 255, 47), (0, 0, 0))
         textrect = text.get_rect()
@@ -62,11 +64,21 @@ class HackBox():
 
     def phase3(self):
         #Display the 4 players and mixed answers
-        pass
+        score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
+        self.screen.blit(score_message, (5, 5))
 
     def phase5(self):
         #Display the 4 answers and who thought who answered what
-        pass
+        score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
+        self.screen.blit(score_message, (5, 5))
+
+    def phase7(self):
+        scores = read_col(sheet3, 2)
+        y = 5
+        for i in range (0, 4):
+            score_message = pg.font.SysFont(None, 50).render(f"{self.players[i]}: {scores[i]}", 1, (173, 255, 47))
+            self.screen.blit(score_message, (WINDOW_WIDTH / 3, y))
+            y += 50
 
     def waitingScreen(self):
         code_image = pg.image.load("code_image.png")
@@ -77,6 +89,8 @@ class HackBox():
         self.dots = (self.dots + 1) % 4
         loading = pg.font.SysFont("None", 30).render("Loading" + dotstring, 1, (173, 255, 47))
         self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
+        score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
+        self.screen.blit(score_message, (5, 5))
 
     def update_score(self):
         inc = 0
@@ -184,8 +198,7 @@ class HackBox():
                 self.state = 7
         elif self.state == 7:
             #Display leaderboard
-            scores = read_col(sheet3, 2)
-            #DISPLAY LEADERBOARD HERE
+            self.phase7()
 
             #Let them out
             for event in pg.event.get():
