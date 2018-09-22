@@ -63,8 +63,7 @@ class InputBox:
         if self.xpos_message >= 0 and self.ypos_message >= 0:
             y = self.ypos_message
             for msg in self.log:
-                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, (173,255,47))
-                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, (173,255,47))
+                self.update()
                 screen.blit(msg_surface, (self.xpos_message, y))
                 if len(msg) > 20:
                     y += 20
@@ -85,11 +84,11 @@ class HackBox():
         self.username = ''
 
     def introScreen(self):
-        title = pg.font.Font(None, 80).render("HackBox", 1, (173,255,47))
+        title = pg.font.SysFont("Times New Roman", 80).render("HackBox", 1, (173,255,47))
         self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
-        description = pg.font.Font(None, 30).render("Answer coding questions! Play Against Your Friends!", 1, (173,255,47))
+        description = pg.font.SysFont("Times New Roman", 30).render("Answer coding questions! Play Against Your Friends!", 1, (173,255,47))
         self.screen.blit(description, (425, 180))
-        label = pg.font.Font(None, 32).render("Please enter a username below:", 1, (173,255,47))
+        label = pg.font.SysFont("Times New Roman", 32).render("Please enter a username below:", 1, (173,255,47))
         self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
     def phase1(self):
@@ -139,7 +138,7 @@ class HackBox():
 
             if pg.mouse.get_pressed()[0]:
                 mouse_pos = pg.mouse.get_pos()
-                pg.draw.rect(self.screen, (255, 0, 0), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
+                pg.draw.rect(self.screen, (173,255,47), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
             
             pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
             chat_label = pg.font.SysFont("Times New Roman", 30).render("Chat:", 1, (173,255,47))
