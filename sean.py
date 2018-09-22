@@ -38,6 +38,7 @@ class HackBox():
         self.players = list()
         self.questions = sheet.worksheet('questions').get_all_values()
         self.clicked = False
+        self.answers = list()
         reset(sheet3)
 
     def introScreen(self):
@@ -71,15 +72,33 @@ class HackBox():
         #Display the 4 answers and who thought who answered what
         score_message = pg.font.SysFont(None, 30).render(f"Score: {self.score}", 1, (173, 255, 47))
         self.screen.blit(score_message, (5, 5))
-        answersInOrder = read_col(sheet3, 4)
-        for i in range((len(self.players)) // 2):
-            for k in range((len(self.players)) // 2):
+        if len(self.answers) == 0:
+            self.answers = read_col(sheet3, 4)
+        for i in range(2):
+            for k in range(2):
+                x = 0
+                y = 0
+                w = WINDOW_WIDTH / 3 + 50
+                h = WINDOW_HEIGHT / 6
+                if k == 0:
+                    x = WINDOW_WIDTH / 8
+                else:
+                    x = 5 * WINDOW_WIDTH / 8
+                if i == 0:
+                    y = WINDOW_HEIGHT / 8
+                else:
+                    y = 5 * WINDOW_HEIGHT / 8
                 pg.draw.rect(self.screen, (0, 0, 255),
-                             (WINDOW_WIDTH / 4 * (i + 1) + 50, WINDOW_HEIGHT / 4 * (k + 1), 200, 100), 0)
-                description = pg.font.SysFont("None", 30).render(self.players[2 * i + k], 1, (173, 255, 47))
-                self.screen.blit(description, (WINDOW_WIDTH / 4 * (i + 1) + 70, WINDOW_HEIGHT / 4 * (k + 1) + 30))
-                label = pg.font.SysFont(None, 32).render(answersInOrder[2 * i + k], 1, (173, 255, 47))
-                self.screen.blit(label, (WINDOW_WIDTH / 4 * (i + 1) + 70, WINDOW_HEIGHT / 4 * (k + 1) + 50))
+                             (x, y, w, h), 0)
+                who = self.answers[2 * i + k]
+                description = pg.font.SysFont("None", 30).render(who[0:50], 1, (173, 255, 47))
+                description2 = pg.font.SysFont("None", 30).render(who[50:100], 1, (173, 255, 47))
+                self.screen.blit(description, (x, y + 5))
+                self.screen.blit(description2, (x, y + 35))
+
+                correct = self.players[2 * i + k]
+                label = pg.font.SysFont(None, 32).render(correct, 1, (173, 255, 47))
+                self.screen.blit(label, (x, y + 95))
 
     def phase7(self):
         scores = read_col(sheet3, 2)
@@ -209,6 +228,7 @@ class HackBox():
                 if self.question == len(self.questions):
                     self.state = 7
                 self.clicked = False
+                self.answers = list()
         elif self.state == 7:
             #Display leaderboard
             self.phase7()
