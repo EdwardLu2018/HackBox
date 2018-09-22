@@ -18,30 +18,45 @@ def guess_to_dict():
 
 #Based on answers, return a dictionary with correct answers
 def get_correct_answer(s):
-    values = s.get_all_values
-    solution = {
-        values[1][1]: values[1][4],
-        values[2][1]: values[2][4],
-        values[3][1]: values[3][4],
-        values[4][1]: values[4][4]
-    }
+    values = s.get_all_values()
+    solution = {}
+    keys = list()
+    vals = list()
+    for player in values:
+        keys.append(player[0])
+        vals.append(player[3])
+    for i in range(0, 4):
+        solution[keys[i]] = vals[i]
     return solution
 
 #Reset the sheet for a new game
 def reset(s):
-    for r in range(1, 5):
-        for c in range(1, 6):
-            s.update_cell(r, c, "0")
+    cells = all_cells(s)
+    for cell in cells:
+        cell.value = "0"
+    s.update_cells(cells)
+
+#More utility
+def col_cells(s, col):
+    return s.range(1, col, 4, col)
 
 #Clear the answers
 def clear_answers(s):
-    for r in range(1, 5):
-        s.update_cell(r, 4, "0")
+    cells = col_cells(s, 4)
+    for cell in cells:
+        cell.value = "0"
+    s.update_cells(cells)
+
+#Utility
+def all_cells(s):
+    return s.range(1, 1, 4, 5)
 
 #Clear the guesses
 def clear_guesses(s):
-    for r in range(1, 5):
-        s.update_cell(r, 5, "0")
+    cells = col_cells(s, 5)
+    for cell in cells:
+        cell.value = "0"
+    s.update_cells(cells)
 
 #Update your score
 def update_score(s, inc):
@@ -76,7 +91,7 @@ def check_cell(s, row, col, val):
 def check_col(s, col, v):
     vals = s.col_values(col)
     for val in vals:
-        if(val == v):
+        if val == v:
             return False
     return True
 
@@ -169,31 +184,28 @@ class HackBox():
         self.input_boxes = [self.chat_box, self.question_input]
         self.username = ''
         self.dots = 0
+        self.question = 1;
         reset(sheet3)
 
     def introScreen(self):
-        title = pg.font.SysFont("Times New Roman", 80).render("HackBox", 1, (173, 255, 47))
+        title = pg.font.SysFont("None", 80).render("HackBox", 1, (173, 255, 47))
         self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
-        description = pg.font.SysFont("Times New Roman", 30).render(
+        description = pg.font.SysFont("None", 30).render(
             "Answer coding questions! Play Against Your (Imaginary) Friends!", 1, (173, 255, 47))
         self.screen.blit(description, (425, 180))
-        label = pg.font.SysFont("Times New Roman", 32).render("Please enter a username below:", 1, (173, 255, 47))
+        label = pg.font.SysFont("None", 32).render("Please enter a username below:", 1, (173, 255, 47))
         self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
 
     def phase1(self):
-        pass
-
-    def phase2(self):
-        pass
+        the_question = sheet3.cell(self.question, 1)
+        #Display the_question on the screen
 
     def phase3(self):
-        pass
-
-    def phase4(self):
-        # Very similar to phase2. Maybe just copy paste most of it
+        #Display the 4 players and mixed answers
         pass
 
     def phase5(self):
+        #Display the 4 answers and who thought who answered what
         pass
 
     def waitingScreen(self):
@@ -203,7 +215,7 @@ class HackBox():
         for dot in range(0, self.dots):
             dotstring += "."
         self.dots = (self.dots + 1) % 4
-        loading = pg.font.SysFont("Times New Roman", 30).render("Loading" + dotstring, 1, (173, 255, 47))
+        loading = pg.font.SysFont("None", 30).render("Loading" + dotstring, 1, (173, 255, 47))
         self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
 
     def update(self):
@@ -231,13 +243,16 @@ class HackBox():
             self.username_input.draw(self.screen)
 
         elif self.state == 1:
+            self.phase1()
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
                 answer = self.question_input.handle_event(event)
                 self.chat_box.handle_event(event)
                 if answer != 0:
+                    sheet3.update_cell(row, 4, answer)
                     self.state += 1
+                    self.question += 1
 
             self.chat_box.update()
             self.question_input.update()
@@ -247,9 +262,9 @@ class HackBox():
                 pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
 
             pg.draw.rect(self.screen, (0, 0, 225), (WINDOW_WIDTH / 2 - 5, 0, 10, WINDOW_HEIGHT), 0)
-            chat_label = pg.font.SysFont("Times New Roman", 30).render("Chat:", 1, (173, 255, 47))
+            chat_label = pg.font.SysFont("None", 30).render("Chat:", 1, (173, 255, 47))
             self.screen.blit(chat_label, (5, 5))
-            chat_message = pg.font.SysFont("Times New Roman", 30).render("Type Message Below:", 1, (173, 255, 47))
+            chat_message = pg.font.SysFont("None", 30).render("Type Message Below:", 1, (173, 255, 47))
             self.screen.blit(chat_message, (10, 610))
             self.question_input.draw(self.screen)
             self.chat_box.draw(self.screen)
@@ -259,8 +274,14 @@ class HackBox():
             for event in pg.event.get():
                 if event.type == pg.QUIT:
                     exit()
-                if event.type == pg.MOUSEBUTTONDOWN:
-                    self.state += 1
+                self.chat_box.handle_event(event)
+            self.chat_box.update()
+            self.chat_box.draw(self.screen)
+            if pg.mouse.get_pressed()[0]:
+                mouse_pos = pg.mouse.get_pos()
+                pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
+            if check_col(sheet3, 4, "0"):
+                self.state += 1
 
         elif self.state == 3:
             self.phase3()
@@ -271,7 +292,18 @@ class HackBox():
                     self.state += 1
 
         elif self.state == 4:
-            self.state += 1
+            self.waitingScreen()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                self.chat_box.handle_event(event)
+            self.chat_box.update()
+            self.chat_box.draw(self.screen)
+            if pg.mouse.get_pressed()[0]:
+                mouse_pos = pg.mouse.get_pos()
+                pg.draw.circle(self.screen, (173, 255, 47), (mouse_pos[0], mouse_pos[1]), 5, 0)
+            if check_col(sheet3, 5, "0"):
+                self.state += 1
 
         elif self.state == 5:
             self.state = 1
