@@ -173,7 +173,8 @@ class HackBox():
                                        -1)
         self.username = ''
         self.dots = 0
-        self.question = 1;
+        self.question = 1
+        self.score = 0
         reset(sheet3)
 
     def introScreen(self):
