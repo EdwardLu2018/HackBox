@@ -110,9 +110,9 @@ class HackBox():
 
     def update(self):
         self.clock.tick(60)
-        
+            
         self.screen.fill((0,0,0))
-
+            
         if self.state == 0:
             hb.introScreen()
             for event in pg.event.get():
@@ -123,7 +123,7 @@ class HackBox():
                     self.state += 1
             self.username_input.update()
             self.username_input.draw(self.screen)
-
+                
         elif self.state == 1:
             for event in pg.event.get():
                 if event.type == pg.QUIT:
@@ -132,10 +132,10 @@ class HackBox():
                 self.chat_box.handle_event(event)
                 if answer != 0:
                     self.state += 1
-
+                    
             self.chat_box.update()
             self.question_input.update()
-
+                
             if pg.mouse.get_pressed()[0]:
                 mouse_pos = pg.mouse.get_pos()
                 pg.draw.rect(self.screen, (173,255,47), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
@@ -149,8 +149,13 @@ class HackBox():
             self.chat_box.draw(self.screen)
             
         elif self.state == 2:
-            self.state += 1
-
+            self.waitingScreen()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    self.state += 1
+                
         elif self.state == 3:
             self.phase3()
             for event in pg.event.get():
@@ -158,15 +163,14 @@ class HackBox():
                     exit()
                 elif event.type == pg.MOUSEBUTTONDOWN:
                     self.state += 1
-
+                    
         elif self.state == 4:
             self.state += 1
-
+            
         elif self.state == 5:
             self.state = 1
             
         pg.display.flip()
-
 
 hb = HackBox()
 while 1:
