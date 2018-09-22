@@ -22,7 +22,7 @@ class InputBox:
         self.log = list() # chat log
         self.max_msg = 1
         if self.is_chat_box:
-            self.max_msg = 27
+            self.max_msg = 20
 
     # handles mouse click
     def handle_event(self, event):
@@ -63,12 +63,13 @@ class InputBox:
         if self.xpos_message >= 0 and self.ypos_message >= 0:
             y = self.ypos_message
             for msg in self.log:
-                self.update()
+                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, (173,255,47))
+                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, (173,255,47))
                 screen.blit(msg_surface, (self.xpos_message, y))
                 if len(msg) > 20:
-                    y += 20
+                    y += 25
                 screen.blit(msg_surface2, (self.xpos_message, y))
-                y += 20
+                y += 25
         pg.draw.rect(screen, self.color, self.input_box, 2)
 
 class HackBox():
