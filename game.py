@@ -70,6 +70,7 @@ class InputBox:
 
 class HackBox():
     def __init__(self):
+        self.score = 0
         self.state = 0
         self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pg.display.set_caption("Hackbox")
