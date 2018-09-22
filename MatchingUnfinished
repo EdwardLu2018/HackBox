@@ -1,0 +1,268 @@
+import pygame as pg
+
+pg.init()
+
+COLOR_INACTIVE = pg.Color("white")
+COLOR_ACTIVE = (173,255,47)
+WINDOW_WIDTH = 1400
+WINDOW_HEIGHT = 700
+
+class InputBox:
+    # constructor for input box
+    def __init__(self, xpos, ypos, w, h, is_c, mx, my, text=''):
+        self.text = text
+        self.input_box = pg.Rect(xpos, ypos, w, h)
+        self.is_chat_box = is_c 
+        self.xpos_message = mx
+        self.ypos_message = my
+        self.color = COLOR_INACTIVE
+        self.txt_surface = pg.font.Font(None, 32).render(text, True, self.color) # first 20 char of chat message
+        self.txt_surface2 = pg.font.Font(None, 32).render(text, True, self.color) # next 20 char of chat message
+        self.is_active = False
+        self.log = list() # chat log
+        self.max_msg = 1
+        if self.is_chat_box:
+            self.max_msg = 20
+
+    # handles mouse click
+    def handle_event(self, event):
+        # if the user clicked on the input box, input box is active
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.input_box.collidepoint(event.pos):
+                self.is_active = not self.is_active
+            else:
+                self.is_active = False
+            self.color = COLOR_ACTIVE if self.is_active else COLOR_INACTIVE
+            
+        # checks if key is pushed
+        if event.type == pg.KEYDOWN:
+            if self.is_active:
+                if event.key == pg.K_RETURN:
+                    if len(self.text) != 0:
+                        self.log.append(self.text) # adds to chat log
+                        if len(self.log) > self.max_msg:
+                            self.log.pop(0)
+                        self.text = ''
+                        return self.log[len(self.log) - 1]
+                elif event.key == pg.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                elif len(self.text) < 60:
+                    self.text += event.unicode
+        return 0
+
+    # edits the text entered into two lines
+    def update(self):
+        self.txt_surface = pg.font.Font(None, 32).render(self.text[0:30], True, (173,255,47))
+        self.txt_surface2 = pg.font.Font(None, 32).render(self.text[30:60], True, (173,255,47))
+
+    # draws chat box
+    def draw(self, screen):
+        self.input_box.w = WINDOW_WIDTH / 2
+        screen.blit(self.txt_surface, (self.input_box.x + 5, self.input_box.y + 5))
+        screen.blit(self.txt_surface2, (self.input_box.x + 5, self.input_box.y + 37))
+        if self.xpos_message >= 0 and self.ypos_message >= 0:
+            y = self.ypos_message
+            for msg in self.log:
+                msg_surface = pg.font.Font(None, 32).render(msg[0:30], True, (173,255,47))
+                msg_surface2 = pg.font.Font(None, 32).render(msg[30:60], True, (173,255,47))
+                screen.blit(msg_surface, (self.xpos_message, y))
+                if len(msg) > 20:
+                    y += 25
+                screen.blit(msg_surface2, (self.xpos_message, y))
+                y += 25
+        pg.draw.rect(screen, self.color, self.input_box, 2)
+
+class DisplayInputs():
+    def __init__(self, write, x, y, activeCol, inactiveCol):
+        self.content = write
+        self.x = x
+        self.y = y
+        self.actCol = activeCol
+        self.inactCol = inactiveCol
+        self.color = inactiveCol
+        
+        
+    def draw(self, screen):
+        basicfont = pg.font.SysFont(None, 48)
+        self.printContent = basicfont.render(self.content, False, self.color,(0,0,0))
+        self.textrect = self.printContent.get_rect()
+        
+        self.textrect.centerx = self.x
+        self.textrect.centery = self.y
+        screen.blit(self.printContent, self.textrect)
+        
+    def handle_event(self, event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.textrect.collidepoint(event.pos):
+                if self.color == self.actCol:
+                    self.color = self.inactCol
+                elif self.color == self.inactCol:
+                    self.color = self.actCol
+                return self.content
+            else:
+                return 0
+    
+class HackBox():
+    def __init__(self):
+        #setup
+        self.screen = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        pg.display.set_caption("Hackbox")
+        self.clock = pg.time.Clock()
+        white = (255,255,255)
+        
+        #states
+        self.state = 0
+        
+        #introscreen
+        self.username_input = InputBox(WINDOW_WIDTH / 4 + 20, WINDOW_HEIGHT / 3 + 100, WINDOW_WIDTH / 2, 64, False, -1, -1)
+        self.username = ''
+        
+        #phase1
+        self.question_input = InputBox(WINDOW_WIDTH / 4, WINDOW_HEIGHT/3, 
+           50, 1000, False, -1, -1)
+        
+        #Loading
+        self.dots = 0
+        
+        #phase3
+        self.players = ("Sophia", "Carolyn", "Awkward", "Sean") #guess_to_dict(string)
+        self.answers = ("highkey lowkey person", "poop", "pee", "saywhat")
+        self.correctMatches = {"Sophia":"highkey lowkey person", "Carolyn":"poop", "Edward":"pee", "Sean":"saywhat"}
+        self.compareMatches = {}
+        self.playerColors = [white,white,white,white]
+        self.playerRect = []
+        self.answerRect = []
+        for i in range(len(self.players)):
+            usernames = DisplayInputs(self.players[i], WINDOW_WIDTH/8, 150+i*125, (173,255,47),(255,255,255))
+            answers = DisplayInputs(self.answers[i], WINDOW_WIDTH*3/4, 150+i*125, (173,255,47), (255,255,255))
+            self.playerRect.append(usernames)
+            self.answerRect.append(answers)
+            
+            
+
+    def introScreen(self):
+        title = pg.font.SysFont(None, 80).render("HackBox", 1, (173,255,47))
+        self.screen.blit(title, (WINDOW_WIDTH / 3 + 120, 100))
+        description = pg.font.SysFont("Times New Roman", 30).render("Answer coding questions! Play Against Your Friends!", 1, (173,255,47))
+        self.screen.blit(description, (425, 180))
+        label = pg.font.SysFont(None, 32).render("Please enter a username below:", 1, (173,255,47))
+        self.screen.blit(label, (WINDOW_WIDTH / 3 + 75, WINDOW_HEIGHT / 3 + 75))
+
+    def phase1(self):
+        #question prompt
+        basicfont = pg.font.SysFont(None, 48)
+
+        question = "What is a good question?"
+        text = basicfont.render(question, False,(255, 255, 255),(0,0,0))
+        textrect = text.get_rect()
+        textrect.centerx = WINDOW_WIDTH/2
+        textrect.centery = 50
+        self.screen.blit(text, textrect)
+        self.question_input.draw(self.screen)
+        
+    def waitingScreen(self):
+        # code_image = pg.image.load("code_image.png")
+        # self.screen.blit(code_image, (60, 0))
+        dotstring = ""
+        for dot in range(0, self.dots):
+            dotstring += "."
+        self.dots = (self.dots + 1) % 4
+        loading = pg.font.SysFont("Times New Roman", 30).render("Loading" + dotstring, 1, (173, 255, 47))
+        self.screen.blit(loading, (WINDOW_WIDTH / 2 - 45, WINDOW_HEIGHT / 2))
+        
+    def phase3(self):
+        prompt = pg.font.SysFont(None,48).render("Match Each Person to Answer", False, (173,255,47))
+        promptRect = prompt.get_rect()
+        promptRect.centerx = WINDOW_WIDTH/2
+        promptRect.centery = 50
+        self.screen.blit(prompt, promptRect)
+        for i in range(len(self.players)):
+            self.playerRect[i].draw(self.screen)
+            self.answerRect[i].draw(self.screen)
+    
+    def chooseMatches(self):
+        countCorrect = 0
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                exit()
+            for col1box in self.playerRect:
+                eh = col1box.handle_event(event)
+                print(eh)       
+            for col2box in self.answerRect:
+                ya = col2box.handle_event(event)
+                print(ya)
+                
+        
+        
+        
+        
+        
+        
+    def phase4(self):
+        #Very similar to phase2. Maybe just copy paste most of it
+        pass
+    def phase5(self):
+        pass
+
+    
+    
+    def mouseCursor(self):
+        if pg.mouse.get_pressed()[0]:
+            mouse_pos = pg.mouse.get_pos()
+            pg.draw.rect(self.screen, (173,255,47), (mouse_pos[0] - 5, mouse_pos[1] - 5, 10, 10), 0)
+
+    def update(self):
+        self.clock.tick(60)
+        
+        self.screen.fill((0,0,0))
+    
+        hb.mouseCursor()
+            
+        if self.state == 0:
+            hb.introScreen()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                self.username = self.username_input.handle_event(event)
+                if self.username != 0:
+                    self.state += 1
+            self.username_input.update()
+            self.username_input.draw(self.screen)
+                
+        elif self.state == 1:
+            hb.phase1()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                answer = self.question_input.handle_event(event)
+                if answer != 0:
+                    self.state += 1
+                    
+            self.question_input.update()
+                
+            
+        elif self.state == 2:
+            hb.waitingScreen()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    exit()
+                if event.type == pg.MOUSEBUTTONDOWN:
+                    self.state += 1
+                
+        elif self.state == 3:
+            hb.phase3()
+            hb.chooseMatches()
+            
+                
+                    
+        elif self.state == 4:
+            self.state += 1
+            
+        elif self.state == 5:
+            self.state = 1
+            
+        pg.display.flip()
+
+hb = HackBox()
+while 1:
+    hb.update()
