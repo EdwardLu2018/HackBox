@@ -114,3 +114,6 @@ def send_message(msg):
 
 def sender_is_bot(message):
 	return message["sender_type"] == "bot"
+
+if __name__ == "__main__":
+    app.run(debug=True)
